@@ -1,0 +1,57 @@
+---
+# Test Namespace - Legacy Namespace for Exception Testing
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: legacy
+
+---
+# Test Pod - Allowed by Exception
+# This Pod should be ALLOWED even though it has privileged: true
+# because it matches the exception criteria:
+# - Namespace: legacy
+# - Name: old-app-* (matches old-app-test)
+apiVersion: v1
+kind: Pod
+metadata:
+  name: old-app-test
+  namespace: legacy
+spec:
+  containers:
+  - name: legacy-container
+    image: nginx:latest
+    securityContext:
+      privileged: true  # Normally blocked by cis-rbi-baseline, but allowed by exception
+      readOnlyRootFilesystem: false
+
+---
+# Test Pod - Not Covered by Exception
+# This Pod should be BLOCKED because it doesn't match the exception criteria:
+# - Name doesn't start with "old-app-"
+apiVersion: v1
+kind: Pod
+metadata:
+  name: new-app-test
+  namespace: legacy
+spec:
+  containers:
+  - name: new-container
+    image: nginx:latest
+    securityContext:
+      privileged: true  # This will be blocked - name doesn't match old-app-*
+
+---
+# Test Pod - Wrong Namespace
+# This Pod should be BLOCKED because it's not in the "legacy" namespace
+apiVersion: v1
+kind: Pod
+metadata:
+  name: old-app-test
+  namespace: default
+spec:
+  containers:
+  - name: legacy-container
+    image: nginx:latest
+    securityContext:
+      privileged: true  # This will be blocked - wrong namespace
+

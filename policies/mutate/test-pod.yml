@@ -1,0 +1,61 @@
+---
+# Test Pod - Without Resources
+# This Pod will be mutated by the default-resources policy to add resource limits and requests
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod-no-resources
+  namespace: default
+spec:
+  containers:
+  - name: nginx
+    image: nginx:latest
+    # No resources specified - policy will add:
+    # limits:
+    #   cpu: "500m"
+    #   memory: "512Mi"
+    # requests:
+    #   cpu: "250m"
+    #   memory: "256Mi"
+
+---
+# Test Pod - With Partial Resources
+# This Pod has some resources but not all - policy will add missing ones
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod-partial-resources
+  namespace: default
+spec:
+  containers:
+  - name: nginx
+    image: nginx:latest
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+      # Missing limits - policy will add:
+      # limits:
+      #   cpu: "500m"
+      #   memory: "512Mi"
+
+---
+# Test Pod - With All Resources
+# This Pod already has all resources specified - policy will not modify it
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod-with-resources
+  namespace: default
+spec:
+  containers:
+  - name: nginx
+    image: nginx:latest
+    resources:
+      limits:
+        cpu: "1"
+        memory: "1Gi"
+      requests:
+        cpu: "500m"
+        memory: "512Mi"
+

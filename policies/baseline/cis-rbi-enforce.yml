@@ -1,0 +1,27 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: cis-rbi-baseline
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+  - name: disallow-privileged
+    match:
+      any:
+      - resources:
+          kinds: [Pod]
+    validate:
+      deny:
+        conditions:
+        - key: "{{ request.object.spec.containers[].securityContext.privileged || 'false' }}"
+          operator: Equals
+          value: true
+  - name: require-readonly-fs
+    match: {any: [{resources: {kinds: [Pod]}}]}
+    validate:
+      pattern:
+        spec:
+          containers:
+          - securityContext:
+              readOnlyRootFilesystem: true

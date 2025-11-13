@@ -1,0 +1,54 @@
+---
+# Test Pod - Compliant Configuration
+# This Pod should be allowed by the cis-rbi-baseline policy
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod-compliant
+  namespace: default
+spec:
+  containers:
+  - name: nginx
+    image: nginx:latest
+    securityContext:
+      readOnlyRootFilesystem: true
+      privileged: false
+    volumeMounts:
+    - name: tmp
+      mountPath: /tmp
+  volumes:
+  - name: tmp
+    emptyDir: {}
+
+---
+# Test Pod - Non-Compliant Configuration (Privileged)
+# This Pod should be BLOCKED by the cis-rbi-baseline policy
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod-privileged
+  namespace: default
+spec:
+  containers:
+  - name: nginx
+    image: nginx:latest
+    securityContext:
+      privileged: true  # This violates the policy
+      readOnlyRootFilesystem: true
+
+---
+# Test Pod - Non-Compliant Configuration (Writable Root FS)
+# This Pod should be BLOCKED by the cis-rbi-baseline policy
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod-writable-fs
+  namespace: default
+spec:
+  containers:
+  - name: nginx
+    image: nginx:latest
+    securityContext:
+      privileged: false
+      # Missing readOnlyRootFilesystem: true - violates policy
+

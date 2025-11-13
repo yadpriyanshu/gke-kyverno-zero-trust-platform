@@ -1,0 +1,14 @@
+apiVersion: kyverno.io/v2
+kind: PolicyException
+metadata:
+  name: allow-legacy-root
+  namespace: legacy
+spec:
+  exceptions:
+  - policyName: cis-rbi-baseline
+    ruleNames: [disallow-privileged]
+  match:
+    any:
+    - resources:
+        names: [old-app-*]
+        kinds: [Pod]

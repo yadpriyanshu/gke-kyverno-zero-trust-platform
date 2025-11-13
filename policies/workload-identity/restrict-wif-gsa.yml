@@ -1,0 +1,21 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: restrict-workload-identity
+spec:
+  validationFailureAction: Enforce
+  rules:
+  - name: enforce-gsa
+    match:
+      any:
+      - resources:
+          kinds: [ServiceAccount]
+    validate:
+      message: "ServiceAccount must use prod-gsa@<project-id>.iam.gserviceaccount.com format"
+      cel:
+        expressions:
+        - expression: |
+            has(object.metadata.annotations) &&
+            'iam.gke.io/gcp-service-account' in object.metadata.annotations &&
+            object.metadata.annotations['iam.gke.io/gcp-service-account'].matches('^prod-gsa@[a-z0-9-]+\\.iam\\.gserviceaccount\\.com$')
+          message: "GCP service account annotation must be in format: prod-gsa@<project-id>.iam.gserviceaccount.com"

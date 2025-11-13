@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: old-app-root
+  namespace: legacy
+  labels:
+    app: legacy
+spec:
+  containers:
+  - name: app
+    image: centos:7
+    securityContext:
+      privileged: true  
+    command: ["sleep", "3600"]

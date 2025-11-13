@@ -1,6 +1,7 @@
 resource "google_container_cluster" "primary" {
   name     = var.cluster_name
   project  = var.project_id
+  location = var.zone
 
   initial_node_count       = 1
   remove_default_node_pool = true
@@ -10,7 +11,6 @@ resource "google_container_cluster" "primary" {
   deletion_protection = false
 
   lifecycle {
-    # prevent_destroy = true
     ignore_changes = [
       node_pool,
       initial_node_count
@@ -78,8 +78,6 @@ resource "google_container_cluster" "primary" {
   binary_authorization {
     evaluation_mode = var.binauthz_mode
   }
-
-  node_locations = [var.zone]
 
   default_max_pods_per_node   = var.default_max_pods_per_node
   enable_intranode_visibility = var.enable_intranode_visibility

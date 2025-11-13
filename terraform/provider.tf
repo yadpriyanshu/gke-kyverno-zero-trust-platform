@@ -6,7 +6,7 @@ terraform {
     }
   }
   backend "gcs" {
-    bucket = "fluent-webbing-474712-k5-tfstate"
+    bucket = "gke-zero-trust-platform-tfstate"
     prefix = "gke-kyverno-zero-trust-platform/terraform/state"
   }
 }

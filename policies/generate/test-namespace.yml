@@ -1,0 +1,39 @@
+---
+# Test Namespace - Will Generate ResourceQuota and NetworkPolicy
+# When this namespace is created, the auto-quota-netpol policy will automatically:
+# 1. Create a ResourceQuota named "default-quota" with:
+#    - pods: "30"
+#    - requests.cpu: "8"
+#    - requests.memory: "16Gi"
+# 2. Create a NetworkPolicy named "default-deny" that blocks all ingress/egress
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test-namespace
+  labels:
+    purpose: testing
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: default
+  namespace: test-namespace
+
+---
+# Test Pod - To Verify NetworkPolicy Works
+# This Pod will be subject to the default-deny NetworkPolicy
+# All ingress and egress will be blocked unless additional NetworkPolicies allow it
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+  namespace: test-namespace
+spec:
+  serviceAccountName: default
+  containers:
+  - name: nginx
+    image: nginx:latest
+    ports:
+    - containerPort: 80
+

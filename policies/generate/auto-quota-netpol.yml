@@ -1,0 +1,44 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: auto-quota-netpol
+spec:
+  rules:
+  - name: generate-quota
+    match:
+      any:
+      - resources:
+          kinds: [Namespace]
+          names: ["*"]
+    exclude:
+      any:
+      - resources:
+          kinds: [Namespace]
+          names: ["kube-system", "kyverno", "argocd"]
+    generate:
+      apiVersion: v1
+      kind: ResourceQuota
+      namespace: "{{request.object.metadata.name}}"
+      name: default-quota
+      synchronize: true
+      data:
+        spec:
+          hard:
+            pods: "30"
+            requests.cpu: "8"
+            requests.memory: "16Gi"
+  - name: generate-netpol
+    match:
+      any:
+      - resources:
+          kinds: [Namespace]
+    generate:
+      apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      namespace: "{{request.object.metadata.name}}"
+      name: default-deny
+      synchronize: true
+      data:
+        spec:
+          podSelector: {}
+          policyTypes: [Ingress, Egress]
