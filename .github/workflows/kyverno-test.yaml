@@ -1,21 +1,45 @@
-name: Kyverno Policy Test
-on: [push, pull_request]
+name: kyverno-policy-test
+on:
+  - pull_request
+  - push
+  - workflow_dispatch
 jobs:
-  kyverno-test:
+  test:
     runs-on: ubuntu-latest
-    permissions: {}
-
-    name: Install Kyverno CLI and Run Tests
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
       - name: Install Kyverno CLI
         uses: kyverno/action-install-cli@v0.2.0
         with:
-          release: 'v1.9.5'
+          release: 'v1.13.0'
 
       - name: Check install
         run: kyverno version
 
-      - name: Run tests
-        run: kyverno cli test ./policies --fail-on-error
+      - name: Test resources against policies
+        run: |
+          # Collect all policy files (excluding test files)
+          POLICIES=$(find policies -name "*.yml" -type f ! -name "test-*.yml" ! -name "*test*.yml" | tr '\n' ' ')
+          if [ -z "$POLICIES" ]; then
+            echo "No policy files found"
+            exit 1
+          fi
+          
+          # Collect all test manifest files from policy subdirectories
+          TEST_RESOURCES=$(find policies -name "test-*.yml" -type f | tr '\n' ' ')
+          
+          # Test against manifests/ directory
+          echo "Testing policies against manifests/ directory..."
+          kyverno apply $POLICIES -r manifests/
+          
+          # Test against test-*.yml files in policy subdirectories
+          if [ -n "$TEST_RESOURCES" ]; then
+            echo "Testing policies against test manifests in policy subdirectories..."
+            kyverno apply $POLICIES -r $TEST_RESOURCES
+          else
+            echo "No test manifest files found in policy subdirectories"
+          fi
